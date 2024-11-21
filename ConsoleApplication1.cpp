@@ -1,9 +1,8 @@
-﻿// ConsoleApplication1.cpp : Ten plik zawiera funkcję „main”. W nim rozpoczyna się i kończy wykonywanie programu.
-//
-
-#include <iostream>
+﻿#include <iostream>
 #include <ctime>
 #include <chrono>
+#include <fstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -18,12 +17,11 @@ void bubblesort(T arr[], size_t n) {
     }
 }
 
-void bubblesort_for_for_pointer(int* arr, size_t n)
-{
-    int* w1, * w2, temp;
+template <typename T>
+void bubblesort_for_for_pointer(T* arr, size_t n) {
+    T* w1, * w2, temp;
 
-    for (size_t i = 0; i < n; i++)
-    {
+    for (size_t i = 0; i < n; i++) {
         w1 = arr;
         w2 = w1 + 1;
 
@@ -32,7 +30,6 @@ void bubblesort_for_for_pointer(int* arr, size_t n)
                 temp = *w2;
                 *w2 = *w1;
                 *w1 = temp;
-
             }
             w1++;
             w2++;
@@ -40,7 +37,8 @@ void bubblesort_for_for_pointer(int* arr, size_t n)
     }
 }
 
-void bubblesort_for_for_index(int arr[], size_t n) {
+template <typename T>
+void bubblesort_for_for_index(T arr[], size_t n) {
     for (size_t i = 0; i < n - 1; i++) {
         for (size_t j = 0; j < n - i - 1; j++) {
             if (arr[j] > arr[j + 1]) {
@@ -50,9 +48,9 @@ void bubblesort_for_for_index(int arr[], size_t n) {
     }
 }
 
-
-void bubblesort_for_while_pointer(int* arr, size_t n) {
-    int* w1, * w2, temp;
+template <typename T>
+void bubblesort_for_while_pointer(T* arr, size_t n) {
+    T* w1, * w2, temp;
     for (size_t i = 0; i < n - 1; i++) {
         w1 = arr;
         w2 = w1 + 1;
@@ -62,7 +60,6 @@ void bubblesort_for_while_pointer(int* arr, size_t n) {
                 temp = *w2;
                 *w2 = *w1;
                 *w1 = temp;
-
             }
             w1++;
             w2++;
@@ -71,8 +68,8 @@ void bubblesort_for_while_pointer(int* arr, size_t n) {
     }
 }
 
-
-void bubblesort_for_while_index(int arr[], size_t n) {
+template <typename T>
+void bubblesort_for_while_index(T arr[], size_t n) {
     for (size_t i = 0; i < n - 1; i++) {
         size_t j = 0;
         while (j < n - i - 1) {
@@ -83,9 +80,10 @@ void bubblesort_for_while_index(int arr[], size_t n) {
         }
     }
 }
-void bubblesort_for_short_pointer(int* arr, size_t n) {
 
-    int* w1, * w2, temp;
+template <typename T>
+void bubblesort_for_short_pointer(T* arr, size_t n) {
+    T* w1, * w2, temp;
 
     for (size_t i = 0; i < n - 1; i++) {
         w1 = arr;
@@ -96,10 +94,14 @@ void bubblesort_for_short_pointer(int* arr, size_t n) {
                 *w2 = *w1;
                 *w1 = temp;
             }
+            w1++;
+            w2++;
         }
     }
 }
-void bubblesort_for_short_index(int arr[], size_t n) {
+
+template <typename T>
+void bubblesort_for_short_index(T arr[], size_t n) {
     for (size_t i = 0; i < n - 1; i++) {
         for (size_t j = 0; j < n - i - 1; j++) {
             if (arr[j] > arr[j + 1]) {
@@ -108,78 +110,64 @@ void bubblesort_for_short_index(int arr[], size_t n) {
         }
     }
 }
-bool sprawdzanie(int arr[], size_t n) {
-    for (size_t i = 0; i < n - 1; i++) {
-        if (arr[i] > arr[i + 1]) {
-            return false;
-        }
 
-    }
-    return true;
-}
-
-template <typename Func, typename... Args>
-void measure_time(const string& func_name, Func func, Args&&... args) {
+template <typename Func, typename T>
+double measure_time(Func func, T arr[], size_t n) {
     auto start = chrono::high_resolution_clock::now();
-    func(forward<Args>(args)...);
+    func(arr, n);
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double, milli> duration = end - start;
-    cout << func_name << " execution time: " << duration.count() << " milliseconds" << endl;
+    return duration.count();
+}
+
+void run_and_measure(int n, ofstream& file) {
+    int* arr_int = new int[n];
+    float* arr_float = new float[n];
+
+    for (int i = 0; i < n; i++) {
+        arr_int[i] = rand() % 1000 + 1;
+        arr_float[i] = static_cast<float>(arr_int[i]);
+    }
+
+    file << "| " << setw(18) << n << " | "
+        << setw(18) << measure_time(bubblesort<int>, arr_int, n) << " | "
+        << setw(19) << measure_time(bubblesort<float>, arr_float, n) << " | "
+        << setw(22) << measure_time(bubblesort_for_for_index<int>, arr_int, n) << " | "
+        << setw(24) << measure_time(bubblesort_for_for_index<float>, arr_float, n) << " | "
+        << setw(24) << measure_time(bubblesort_for_while_index<int>, arr_int, n) << " | "
+        << setw(26) << measure_time(bubblesort_for_while_index<float>, arr_float, n) << " | "
+        << setw(24) << measure_time(bubblesort_for_short_index<int>, arr_int, n) << " | "
+        << setw(26) << measure_time(bubblesort_for_short_index<float>, arr_float, n) << " | "
+        << setw(24) << measure_time(bubblesort_for_for_pointer<int>, arr_int, n) << " | "
+        << setw(26) << measure_time(bubblesort_for_for_pointer<float>, arr_float, n) << " | "
+        << setw(26) << measure_time(bubblesort_for_while_pointer<int>, arr_int, n) << " | "
+        << setw(28) << measure_time(bubblesort_for_while_pointer<float>, arr_float, n) << " | "
+        << setw(26) << measure_time(bubblesort_for_short_pointer<int>, arr_int, n) << " | "
+        << setw(28) << measure_time(bubblesort_for_short_pointer<float>, arr_float, n) << " |" << endl;
+
+    delete[] arr_int;
+    delete[] arr_float;
 }
 
 int main() {
     srand(time(0));
-    int arr[10000];
 
-    size_t n = 10000;
-    for (size_t i = 0; i < n; i++) {
-        arr[i] = rand() % 100000 + 1;
-    }
+    ofstream file("results.txt");
 
-    if (sprawdzanie(arr, n) == 0) {
-        cout << "nie" << endl;
+    if (file.is_open()) {
+        file << "| Number of Elements | Template Int (ms)  | Template Float (ms) | For-For Index Int (ms) | For-For Index Float (ms) | For-While Index Int (ms) | For-While Index Float (ms) | For-Short Index Int (ms) | For-Short Index Float (ms) | For-For Pointer Int (ms) | For-For Pointer Float (ms) | For-While Pointer Int (ms) | For-While Pointer Float (ms) | For-Short Pointer Int (ms) | For-Short Pointer Float (ms) |" << endl;
+        file << "|--------------------|--------------------|---------------------|------------------------|--------------------------|--------------------------|----------------------------|--------------------------|----------------------------|--------------------------|----------------------------|----------------------------|------------------------------|----------------------------|------------------------------|" << endl;
 
-    }
-    else {
-        cout << "tak" << endl;
+        run_and_measure(100, file);
+        run_and_measure(1000, file);
+        run_and_measure(10000, file);
 
-    }
-    std::cout << "Sorting using bubbleSortForShorter:\n";
-    measure_time("bubbleSortForShortIndex", bubblesort_for_short_index, arr, n);
-    for (size_t i = 0; i < n; i++) cout << arr[i] << " ";
 
-    std::cout << "\n\nSorting using bubbleSortForFor:\n";
-    measure_time("bubbleSortForForIndex", bubblesort_for_for_index, arr, n);
-    for (size_t i = 0; i < n; i++) cout << arr[i] << " ";
 
-    std::cout << "\n\nSorting using bubbleSortForWhile:\n";
-    measure_time("bubbleSortForWhileIndex", bubblesort_for_while_index, arr, n);
-    for (size_t i = 0; i < n; i++) cout << arr[i] << " ";
-
-    std::cout << "\n\nSorting using bubbleSortForPointer:\n";
-    measure_time("bubbleSortForForPointer", bubblesort_for_for_pointer, arr, n);
-    for (size_t i = 0; i < n; i++) cout << arr[i] << " ";
-
-    std::cout << "\n\nSorting using bubbleSortForWhilePointer:\n";
-    measure_time("bubbleSortForWhilePointer", bubblesort_for_while_pointer, arr, n);
-    for (size_t i = 0; i < n; i++) cout << arr[i] << " ";
-
-    std::cout << "\n\nSorting using bubbleSortForShortPointer:\n";
-    measure_time("bubbleSortForShortPointer", bubblesort_for_short_pointer, arr, n);
-    for (size_t i = 0; i < n; i++) cout << arr[i] << " ";
-
-    std::cout << "\n\nSorting using template bubbleSort:\n";
-    measure_time("template bubbleSort", bubblesort<int>, arr, n);
-    for (size_t i = 0; i < n; i++) cout << arr[i] << " ";
-
-    cout << " \n";
-    if (sprawdzanie(arr, n) == 0) {
-        cout << "nie" << endl;
-
+        file.close();
     }
     else {
-        cout << "tak" << endl;
-
+        cerr << "Nie moge otworzyc pliku";
     }
 
     return 0;
